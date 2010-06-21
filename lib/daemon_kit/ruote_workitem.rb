@@ -13,7 +13,6 @@ module DaemonKit
       # fields key:
       #
       #   {
-      #     'reply_queue'    => 'queue to send replies to',
       #     'params' => {
       #       'command'  => '/actor/method'
       #     }
@@ -27,7 +26,7 @@ module DaemonKit
       #
       # == Notes on replies
       #
-      # Replies are sent back to the queue specified in the +reply_queue+ key.
+      # Replies are sent back to the 'ruote_workitems' queue. (ruote >= 2.1.10)
       #
       # == Notes on errors
       #
@@ -91,7 +90,7 @@ module DaemonKit
 
       def reply_via_amqp( response )
         DaemonKit.logger.debug("Replying to engine via AMQP with #{response.inspect}")
-        ::MQ.queue( response['params']['reply_queue'] ).publish( response.to_json )
+        ::MQ.queue( 'ruote_workitems' ).publish( response.to_json )
 
         response
       end
