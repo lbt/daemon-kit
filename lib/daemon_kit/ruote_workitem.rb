@@ -16,6 +16,9 @@ module DaemonKit
       #     'params' => {
       #       'command'  => '/actor/method'
       #     }
+      #     'participant_options' => {
+      #       'command'  => '/actor/method'
+      #     }
       #   }
       #
       # == Notes on the command key:
@@ -63,15 +66,16 @@ module DaemonKit
           work["__error__"] = msg
         end
 
-        reply_to_engine( transport, work )
+        reply_to_engine( transport, work ) unless work.determine_param "forget"
       end
 
       # Extract the class and method name from the workitem, then pick the matching
       # class from the registered list of participants
       def parse_command( work )
-        return nil if work['params']['command'].nil?
+        command = work.determine_param "command"
+        return nil if command.nil?
 
-        _, klass, method = work['params']['command'].split('/')
+        _, klass, method = command.split('/')
 
         instance = RuoteParticipants.instance.participants[ klass ]
 
@@ -181,6 +185,13 @@ module DaemonKit
 
       super
     end
-
+    # This is temporary until we can use an api exported from
+    # ruote/ruote-amqp
+    def determine_param( key )
+      params = @workitem['fields']['params']
+      return params[key] if params and params.has_key?( key )
+      return params['participant_options'][key] if params and params['participant_options'].has_key?( key ) 
+      nil
+    end
   end
 end
